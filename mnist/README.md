@@ -67,7 +67,7 @@ The job takes up to 4 minutes using the `gpu-small` preset.
 
 We can check that there is indeed a serialized tensor stored on the storage:
 ```shell
-neuro ls -l storage:examples/mnist                                                                                                                                                                                                                    master ◼
+neuro ls -l storage:examples/mnist
 -m 4800957 2020-05-04 15:21:18 model.pkl
 ```
 
@@ -83,4 +83,64 @@ ls -l
 -rwx------  1 user  group   517 Apr 30 18:21 seldon.Dockerfile
 -rw-r--r--  1 user  group  1193 Apr 30 18:22 seldon_model.py
 -rw-r--r--  1 user  group   176 May  4 15:12 train.Dockerfile
+```
+
+
+```python
+import io
+
+import torch
+from PIL import Image
+from torchvision import transforms
+
+from .main import Net
+```
+
+
+```python
+    def __init__(self):
+        self._model = Net()
+        self._model.load_state_dict(
+            torch.load("/storage/model.pkl", map_location=torch.device("cpu"))
+        )
+        self._model.eval()
+```
+
+```python
+    def predict(self, X, features_names):
+        data = transforms.ToTensor()(Image.open(io.BytesIO(X)))
+        return self._model(data[None, ...]).detach().numpy()
+```
+
+```shell
+neuro-extras image build -f seldon.Dockerfile . image:examples/mnist:seldon
+```
+
+```shell
+neuro run -n example-mnist --http 5000 --no-http-auth --detach -v storage:examples/mnist:/storage:ro image:examples/mnist:seldon
+```
+
+```shell
+curl -F binData=@img_103.jpg https://example-mnist--user.jobs.neuro-ai-public.org.neu.ro/predict
+```
+
+```shell
+neuro kill example-mnist
+```
+
+
+```shell
+kubectl create namespace seldon
+neuro-extras k8s generate-registry-secret | kubectl -n seldon apply -f -
+neuro-extras k8s generate-secret | kubectl -n seldon apply -f -
+neuro-extras seldon generate-deployment image:examples/mnist:seldon \
+    storage:examples/mnist/model.pkl | kubectl -n seldon apply -f -
+```
+
+```shell
+kubectl proxy
+```
+
+```shell
+curl -vv -F binData=@img_103.jpg "http://localhost:8001/api/v1/nodes/master:32288/proxy/seldon/seldon/neuro-model/api/v1.0/predictions"
 ```
