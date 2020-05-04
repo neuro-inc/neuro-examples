@@ -122,6 +122,7 @@ neuro run -n example-mnist --http 5000 --no-http-auth --detach -v storage:exampl
 
 ```shell
 curl -F binData=@img_103.jpg https://example-mnist--user.jobs.neuro-ai-public.org.neu.ro/predict
+{"data":{"names":["t:0","t:1","t:2","t:3","t:4","t:5","t:6","t:7","t:8","t:9"],"tensor":{"shape":[1,10],"values":[-3.3279592990875244,-2.659998655319214,-0.39225172996520996,-2.8468592166900635,-5.054018020629883,-5.108893394470215,-4.198001861572266,-2.7248833179473877,-2.8381588459014893,-4.701035499572754]}},"meta":{}}
 ```
 
 ```shell
@@ -142,5 +143,6 @@ kubectl proxy
 ```
 
 ```shell
-curl -vv -F binData=@img_103.jpg "http://localhost:8001/api/v1/nodes/master:32288/proxy/seldon/seldon/neuro-model/api/v1.0/predictions"
+curl -F binData=@img_103.jpg "http://localhost:8001/api/v1/nodes/master:32288/proxy/seldon/seldon/neuro-model/api/v1.0/predictions"
+{"data":{"names":["t:0","t:1","t:2","t:3","t:4","t:5","t:6","t:7","t:8","t:9"],"tensor":{"shape":[1,10],"values":[-3.3279592990875244,-2.659998655319214,-0.39225172996520996,-2.8468592166900635,-5.054018020629883,-5.108893394470215,-4.198001861572266,-2.7248833179473877,-2.8381588459014893,-4.701035499572754]}},"meta":{}}
 ```
