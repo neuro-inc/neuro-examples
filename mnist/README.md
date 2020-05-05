@@ -166,6 +166,7 @@ Assuming the Http URL value was `https://example-mnist--user.jobs.neuro-ai-publi
 curl -F binData=@img_103.jpg https://example-mnist--user.jobs.neuro-ai-public.org.neu.ro/predict
 {"data":{"names":["t:0","t:1","t:2","t:3","t:4","t:5","t:6","t:7","t:8","t:9"],"tensor":{"shape":[1,10],"values":[-3.3279592990875244,-2.659998655319214,-0.39225172996520996,-2.8468592166900635,-5.054018020629883,-5.108893394470215,-4.198001861572266,-2.7248833179473877,-2.8381588459014893,-4.701035499572754]}},"meta":{}}
 ```
+The array element with the index `2` has the highest score, as expected.
 
 If the testing job is no longer needed, we can simply kill it to release the resources:
 ```shell
@@ -176,7 +177,7 @@ neuro kill example-mnist
 
 After a successfull test of our inference server, we need to push the result into production.
 
-Since your Seldon Core deployment typically resides outside of Neu.ro, for example, in your on-premise K8S cluster, we need to instruct K8S and Seldon to pull our newly-built model image, as well as the corresponding serialized model into the cluster. `neuro-extras` allows creating the required resource easily:
+Since your Seldon Core deployment typically resides outside of Neu.ro, for example, in your on-premise K8S cluster, we need to instruct K8S and Seldon to pull our newly-built model image, as well as the corresponding serialized model into the cluster. `neuro-extras` allows creating the required resources easily:
 
 ```shell
 # Creating a dedicated namespace to keep all the related resources together
@@ -199,3 +200,4 @@ At last, let's test our production setup. We will use the same `curl` command, b
 curl -F binData=@img_103.jpg "http://<GATEWAY>/seldon/seldon/neuro-model/api/v1.0/predictions"
 {"data":{"names":["t:0","t:1","t:2","t:3","t:4","t:5","t:6","t:7","t:8","t:9"],"tensor":{"shape":[1,10],"values":[-3.3279592990875244,-2.659998655319214,-0.39225172996520996,-2.8468592166900635,-5.054018020629883,-5.108893394470215,-4.198001861572266,-2.7248833179473877,-2.8381588459014893,-4.701035499572754]}},"meta":{}}
 ```
+`2` it is.
