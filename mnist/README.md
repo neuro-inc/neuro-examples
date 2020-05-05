@@ -10,14 +10,21 @@ Our goals here:
 
 
 ## Prerequisites
+First and foremost, you need to have `neuro` and `neuro-extras` installed in your system:
 ```shell
 # Installing `neuro`
 pip install neuromation
-neuro login
 
 # Installing `neuro-extras`
 pip install git+ssh://git@github.com/neuromation/neuro-extras.git
 ```
+
+YOu should also make sure you are logged into Neu.ro:
+```
+neuro login
+```
+
+For deployment on Seldon Core you will also need to have it up and running. It is assumed that you have `kubectl` configured locally to be able to create necessary K8S resources.
 
 ## Training
 
@@ -27,19 +34,16 @@ curl -O "https://raw.githubusercontent.com/pytorch/examples/master/mnist/main.py
 curl -O "https://raw.githubusercontent.com/pytorch/examples/master/mnist/requirements.txt"
 ```
 
-As you can see in `main.py`, the path to a resulting serialized tensor is
+If you check the contents of `main.py`, the path to a resulting serialized model is
 baked right into the code:
 ```python
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
 ```
+This does not look flexible enough for our purposes, thus we would probably need to patch the code and expose another command option to specify the path. For simplicity's sake we won't go there, but rather copy the resulting model once the training process finishes.
 
-Upon finishing training, the tensor should be copied to a mounted volume under
-a chosen name.
-
-To accomplish that, we need to write a Dockerfile for the training job.
-The image will be based on a prebuilt PyTorch image. The complete list can be
-found on [PyTorch DockerHub](https://hub.docker.com/r/pytorch/pytorch/tags).
+The serialized model should be copied to a mounted Storage volume under a chosen path. To accomplish that, we need to write a Dockerfile for the training job and save it as `train.Dockerfile` for further use.
+The image will be based on a prebuilt PyTorch image. The complete list can be found on [PyTorch DockerHub](https://hub.docker.com/r/pytorch/pytorch/tags).
 
 ```Dockerfile
 FROM pytorch/pytorch:1.5-cuda10.1-cudnn7-runtime
@@ -50,27 +54,33 @@ COPY main.py .
 
 CMD bash -c "python main.py --save-model; mv mnist_cnn.pt $MODEL_PATH"
 ```
+As you can see, the CMD is meant to perform two operations: (1) train a model, save it in the default location; (2) copy the saved model into another location where we mount our Storage volume.
 
-Lets build an image! The following command does not require running Docker
-Engine locally. The build process will be performed on the platform.
+Lets build the image! The following command does not require a running Docker Engine locally. The build process will be performed on Neu.ro.
 
 ```shell
 neuro-extras image build -f train.Dockerfile . image:examples/mnist:train
 ...
 INFO: Successfully built image:examples/mnist:train
 ```
+The command above instructs Neu.ro to copy the build context (the current working directory `.` in this case), use the build steps from `train.Dockerfile`, and save the resuling image under `image:examples/mnist:train` in a Neu.ro registry. We can check the registry contents using:
 
-Now that we have the image available within the platform, we can actually run
-a training job.
+```shell
+neuro image tags image:examples/mnist 
+image:examples/mnist:train
+```
+
+Now that we have the image available within Neu.ro, we can actually run a training job.
 ```shell
 neuro run -s gpu-small -v storage:examples/mnist:/var/storage \
     -e MODEL_PATH=/var/storage/model.pkl image:examples/mnist:train
 ...
 Test set: Average loss: 0.0265, Accuracy: 9910/10000 (99%)
 ```
+Note that we explicitly specify the MODEL_PATH environment variables which leads to the mount Storage volume.
 The job takes up to 4 minutes using the `gpu-small` preset.
 
-We can check that there is indeed a serialized tensor stored on the storage:
+We can check that there is indeed a serialized modes stored on the storage:
 ```shell
 neuro ls -l storage:examples/mnist
 -m 4800957 2020-05-04 15:21:18 model.pkl
