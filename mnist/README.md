@@ -16,7 +16,7 @@ First and foremost, you need to have `neuro` and `neuro-extras` installed in you
 pip install neuromation
 
 # Installing `neuro-extras`
-pip install git+ssh://git@github.com/neuromation/neuro-extras.git
+pip install git+https://git@github.com/neuromation/neuro-extras
 ```
 
 You should also make sure you are logged into Neu.ro:
