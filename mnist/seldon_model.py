@@ -7,18 +7,7 @@ from torchvision import transforms
 
 
 class SeldonModel:
-    """
-    Model template. You can load your model parameters in __init__ from a location
-    accessible at runtime.
-    """
-
     def __init__(self):
-        """
-        Add any initialization parameters. These will be passed at runtime from
-        the graph definition parameters defined in your seldondeployment kubernetes
-        resource manifest.
-        """
-        print("Initializing")
         self._model = Net()
         self._model.load_state_dict(
             torch.load("/storage/model.pkl", map_location=torch.device("cpu"))
