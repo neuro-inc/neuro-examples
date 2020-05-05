@@ -1,7 +1,12 @@
 Training and Deploying a MNIST Model
 ====================================
 
-Based on [Basic PyTorch example](https://github.com/pytorch/examples/tree/master/mnist).
+This tutorial is based on [Basic PyTorch example](https://github.com/pytorch/examples/tree/master/mnist).
+Our goals here:
+1. Prepare and train a basic model on Neu.ro;
+2. Wrap the model into an inference HTTP server;
+3. Test inference on Neu.ro;
+4. Launch production inference on existing Seldon Core.
 
 
 ## Prerequisites
